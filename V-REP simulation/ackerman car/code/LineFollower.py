@@ -263,7 +263,7 @@ class LineFollower:
             if err_code != vrep.simx_return_ok:
                 print("Error changing rotation angle at right steering")
 
-            print(time.time() - cycle_start_time)
+            # print(time.time() - cycle_start_time)
             time.sleep(cycleTime - (time.time() - cycle_start_time))
 
             err_code = -1
