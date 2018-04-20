@@ -45,7 +45,7 @@ def init():
         exit(-2)
 
     s = 0
-    while s < 5:
+    while s < 3:
         run_test(client_id, speed=100, kp=10, ki=0, kd=0)
         s += 1
 
