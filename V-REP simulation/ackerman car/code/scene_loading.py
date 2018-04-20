@@ -40,7 +40,7 @@ if res != vrep.simx_return_ok:
 
 s = 0
 while s < 10:
-    runTest(100, 30, 0, 0)
+    runTest(100, 10, 0, 0)
     s += 1
 
 while res != vrep.simx_return_ok:

@@ -18,7 +18,7 @@ half_pi = math.pi / 2
 degToRadConst = math.pi / 180
 half_t = 0.0755 / 2  # t = 0.0755 = distance between left and right wheels
 l = 0.1289  # l = distance between front and back wheels
-cycleTime = 0.5
+cycleTime = 0.1
 
 class lineFollower:
 
@@ -181,14 +181,12 @@ class lineFollower:
                                                        vrep.simx_opmode_streaming)
             if err_code != vrep.simx_return_ok:
                 print("Error setting base speed to left motor")
-                time.sleep(1)
         err_code = -1
         while err_code != vrep.simx_return_ok:
             err_code = vrep.simxSetJointTargetVelocity(self.clientID, self.right_motor, actualSpeed,
                                                        vrep.simx_opmode_streaming)
             if err_code != vrep.simx_return_ok:
                 print("Error setting base speed to right motor")
-                time.sleep(1)
 
         carOnFloor = True
         while carOnFloor:
@@ -199,6 +197,7 @@ class lineFollower:
             while resultR != vrep.simx_return_ok:
                 resultR, state, dataRight = vrep.simxReadVisionSensor(self.clientID, self.right_sensor,
                                                         vrep.simx_opmode_streaming)
+
             while resultL != vrep.simx_return_ok:
                 resultL, state, dataLeft = vrep.simxReadVisionSensor(self.clientID, self.left_sensor,
                                                         vrep.simx_opmode_streaming)
@@ -207,8 +206,8 @@ class lineFollower:
                 sensorDataL = dataLeft[0][11]
             if resultR == vrep.simx_return_ok:
                 sensorDataR = dataRight[0][11]
-            error = sensorDataR - sensorDataL
-            print(error)
+            error = (sensorDataR - sensorDataL)
+            # print(error)
             integral = integral + error
             derivative = error - prevError
             prevError = error
@@ -220,31 +219,34 @@ class lineFollower:
             if (correctionAngle < -half_pi) :
                 correctionAngle = -half_pi
 
-            print(correctionAngle)
+            # print(correctionAngle)
 
             tanCorAngle = math.tan(correctionAngle)
 
-            steeringAngleLeft = math.atan(l / (-half_t + l * tanCorAngle))
-            steeringAngleRight = math.atan(l / (half_t + l * tanCorAngle))
+            steeringAngleRight = 0
+            steeringAngleLeft = 0
+            if tanCorAngle != 0:
+                steeringAngleLeft = math.atan(l / (-half_t + l / tanCorAngle))
+                steeringAngleRight = math.atan(l / (half_t + l / tanCorAngle))
 
-            print (str(steeringAngleLeft) + " " + str(steeringAngleRight))
+            # print (str(steeringAngleLeft) + " " + str(steeringAngleRight))
 
-            # err_code = vrep.simxSetJointTargetPosition(self.clientID, self.left_steering, steeringAngleLeft,
-            #                                            vrep.simx_opmode_streaming)
-            # if err_code != vrep.simx_return_ok:
-            #     print("Error changing rotation angle at left steering")
-            #
-            # err_code = vrep.simxSetJointTargetPosition(self.clientID, self.right_steering, steeringAngleRight,
-            #                                            vrep.simx_opmode_streaming)
-            # if err_code != vrep.simx_return_ok:
-            #     print("Error changing rotation angle at right steering")
+            err_code = vrep.simxSetJointTargetPosition(self.clientID, self.left_steering, steeringAngleLeft,
+                                                       vrep.simx_opmode_streaming)
+            if err_code != vrep.simx_return_ok:
+                print("Error changing rotation angle at left steering")
 
-            # print(time.time() - cycleStartTime)
-            # time.sleep(cycleTime - (time.time() - cycleStartTime))
+            err_code = vrep.simxSetJointTargetPosition(self.clientID, self.right_steering, steeringAngleRight,
+                                                       vrep.simx_opmode_streaming)
+            if err_code != vrep.simx_return_ok:
+                print("Error changing rotation angle at right steering")
+
+            print(time.time() - cycleStartTime)
+            time.sleep(cycleTime - (time.time() - cycleStartTime))
 
             err_code = -1
             while err_code != vrep.simx_return_ok:
                 err_code, position = vrep.simxGetObjectPosition(self.clientID, self.path, self.left_motor, vrep.simx_opmode_blocking)
-            print(position)
+            # print(position)
             if position[0] > 0.2:
                 carOnFloor = False
