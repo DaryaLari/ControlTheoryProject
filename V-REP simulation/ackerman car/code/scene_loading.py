@@ -46,9 +46,15 @@ def close_connection_scene(client_id):
     ###-###
 
 
-def run_test(client_id, speed, kp, ki, kd):
+def run_test(client_id, speed, kp, ki, kd, log_errors=False):
+    print("\n-------------------------"
+          + "\n| Speed: " + str(speed)
+          + "\n| Kp: " + str(kp)
+          + "\n| Ki: " + str(ki)
+          + "\n| Kd: " + str(kd)
+          + "\n---")
     ### Init & start simulation ###
-    lf = LineFollower.LineFollower(client_id, speed, kp, ki, kd)
+    lf = LineFollower.LineFollower(client_id, speed, kp, ki, kd, log_errors=log_errors)
     err_code = vrep.simxStartSimulation(client_id, vrep.simx_opmode_oneshot)
     # if err_code != vrep.simx_return_ok:
     #     print("Error starting simulation")
@@ -67,5 +73,9 @@ def run_test(client_id, speed, kp, ki, kd):
         err_code = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot)
         time.sleep(1)
     ###-###
-    print(sim_time)
+
+    print("---"
+          + "\n| Sim. time: " + str(sim_time)
+          + "\n-------------------------")
+
     return sim_time
