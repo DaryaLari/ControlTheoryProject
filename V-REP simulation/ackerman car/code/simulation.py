@@ -39,14 +39,14 @@ def close_connection_scene(client_id):
         err_code = vrep.simxCloseScene(client_id, vrep.simx_opmode_blocking)
         time.sleep(1)
     ###-###
+
     ### Disconnect from remote API server ###
-    # Now close the connection to V-REP:
     vrep.simxFinish(client_id)
     print('Program ended')
     ###-###
 
 
-def run_test(client_id, speed, kp, ki, kd, log_errors=False):
+def run_test(client_id, speed, kp, ki, kd, log_errors=False, time_limit=-1):
     print("\n-------------------------"
           + "\n| Speed: " + str(speed)
           + "\n| Kp: " + str(kp)
@@ -54,7 +54,7 @@ def run_test(client_id, speed, kp, ki, kd, log_errors=False):
           + "\n| Kd: " + str(kd)
           + "\n---")
     ### Init & start simulation ###
-    lf = LineFollower.LineFollower(client_id, speed, kp, ki, kd, log_errors=log_errors)
+    lf = LineFollower.LineFollower(client_id, speed, kp, ki, kd, log_errors=log_errors, time_limit=time_limit)
     err_code = vrep.simxStartSimulation(client_id, vrep.simx_opmode_oneshot)
     # if err_code != vrep.simx_return_ok:
     #     print("Error starting simulation")
@@ -62,9 +62,7 @@ def run_test(client_id, speed, kp, ki, kd, log_errors=False):
     ###-###
 
     ### Run simulation ###
-    start_time = time.time()
-    lf.runCar()
-    sim_time = time.time() - start_time
+    sim_time = lf.run_car()
     ###-###
 
     ### Stop simulation ###
