@@ -5,6 +5,8 @@ import simulation
 
 client_id = -1
 generation = 0
+sim_time_limit = -1
+max_generations = 100
 
 params_borders = [
     [50, 250],
@@ -12,6 +14,22 @@ params_borders = [
     [0, 5],
     [0, 50]
 ]
+
+default_params = [100, 5, 0.1, 1]
+
+
+def init_tester(c_id, borders, default_p, time_limit=-1, gen_amount=100):
+    params_borders.clear()
+    for b in borders:
+        params_borders.append(b)
+    default_params.clear()
+    for p in default_p:
+        default_params.append(p)
+    global client_id, sim_time_limit, max_generations
+    client_id = c_id
+    sim_time_limit = time_limit
+    max_generations = gen_amount
+
 
 
 def export_population_info(params):
@@ -36,8 +54,8 @@ def eval_genomes(genomes, config):
     export_population_info(["Speed", "Kp", "Ki", "Kd", "Time", "Fitness"])
     for genome_id, genome in genomes:
         net = neat.nn.FeedForwardNetwork.create(genome, config)
-        [speed, kp, ki, kd] = denormalize_params(net.activate(normalize_params([100, 5, 0.1, 1])))
-        time = simulation.run_test(client_id, speed, kp, ki, kd, log_errors=False, time_limit=1500)
+        [speed, kp, ki, kd] = denormalize_params(net.activate(normalize_params(default_params)))
+        time = simulation.run_test(client_id, speed, kp, ki, kd, log_errors=False, time_limit=sim_time_limit)
         genome.fitness = speed * time
         export_population_info([speed, kp, ki, kd, time, genome.fitness])
 
@@ -66,8 +84,8 @@ def run():
     # if last_g != -1:
     #     p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-' + str(last_g))
 
-    # Run for up to 100 generations.
-    winner = p.run(eval_genomes, 100)
+    # Run several generations.
+    winner = p.run(eval_genomes, max_generations)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
