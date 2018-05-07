@@ -132,12 +132,12 @@ class LineFollower:
         if err_code != vrep.simx_return_ok:
             self.log_errors and print("Can not find middle sensor")
 
-    def __init__(self, client_id, speed, kp, ki, kd, log_errors=False, time_limit=-1):
+    def __init__(self, client_id, params, log_errors=False, time_limit=-1):
         self.clientID = client_id
-        self.speed = speed
-        self.Kp = kp
-        self.Ki = ki
-        self.Kd = kd
+        self.speed = params[0]
+        self.Kp = params[1]
+        self.Ki = params[2]
+        self.Kd = params[3]
         self.log_errors = log_errors
         self.time_limit = time_limit
 

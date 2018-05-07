@@ -82,7 +82,7 @@ def run():
 
     # last_g = neat.Checkpointer.last_generation_checkpoint
     # if last_g != -1:
-    #     p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-' + str(last_g))
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-18')
 
     # Run several generations.
     winner = p.run(eval_genomes, max_generations)
