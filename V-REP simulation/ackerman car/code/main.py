@@ -25,7 +25,18 @@ def run_test_engine(client_id):
 
 
 def run_NEAT_tests(client_id):
-    NEAT_Tester.client_id = client_id
+    NEAT_Tester.init_tester(
+        c_id=client_id,
+        borders=[
+            [75, 250],
+            [0, 25],
+            [0, 2.5],
+            [0, 20]
+        ],
+        default_p=[100, 5, 0.1, 1],
+        time_limit=750,
+        gen_amount=100
+    )
     NEAT_Tester.run()
 
 
@@ -34,7 +45,7 @@ def run_simple_test(client_id):
 
 
 def run_program():
-    client_id = simulation.init_connection_scene(path="..\\ackerman_car_with_additional_paths_1.ttt") # path to scene
+    client_id = simulation.init_connection_scene(path="..\\ackerman_car.ttt") # path to scene
 
     # export_data([["speed", "kp", "ki", "kd", "time"]])
     # run_simple_test(client_id)
