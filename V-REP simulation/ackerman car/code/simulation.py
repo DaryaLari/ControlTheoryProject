@@ -54,11 +54,8 @@ def run_test(client_id, speed, kp, ki, kd, log_errors=False, time_limit=-1):
           + "\n| Kd: " + str(kd)
           + "\n---")
     ### Init & start simulation ###
-    lf = LineFollower.LineFollower(client_id, speed, kp, ki, kd, log_errors=log_errors, time_limit=time_limit)
-    err_code = vrep.simxStartSimulation(client_id, vrep.simx_opmode_oneshot)
-    # if err_code != vrep.simx_return_ok:
-    #     print("Error starting simulation")
-        # return
+    lf = LineFollower.LineFollower(client_id, [speed, kp, ki, kd], log_errors=log_errors, time_limit=time_limit)
+    vrep.simxStartSimulation(client_id, vrep.simx_opmode_oneshot)
     ###-###
 
     ### Run simulation ###
