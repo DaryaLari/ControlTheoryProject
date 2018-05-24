@@ -2,7 +2,7 @@ import csv
 
 import simulation
 import TestDataGenerator
-from NEAT_engine import NEAT_Tester_old, NEAT_Tester
+from NEAT_engine import NEAT_Tester
 
 
 def export_data(params):
@@ -25,22 +25,6 @@ def run_test_engine(client_id):
         export_data([[t_speed, t_kp, t_ki, t_kd, t_time]])
 
 
-def run_old_NEAT_tests(client_id):
-    NEAT_Tester_old.init_tester(
-        c_id=client_id,
-        borders=[
-            [75, 250],
-            [0, 25],
-            [0, 2.5],
-            [0, 20]
-        ],
-        default_p=[100, 5, 0.1, 1],
-        time_limit=750,
-        gen_amount=100
-    )
-    NEAT_Tester_old.run()
-
-
 def run_NEAT_tests(client_id):
     NEAT_Tester.init_tester(
         c_id=client_id,
@@ -60,7 +44,6 @@ def run_program():
 
     # run_simple_test(client_id)
     # run_test_engine(client_id)
-    # run_old_NEAT_tests(client_id)
     run_NEAT_tests(client_id)
 
     simulation.close_connection_scene(client_id)
