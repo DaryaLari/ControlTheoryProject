@@ -132,7 +132,7 @@ class LineFollower:
         if err_code != vrep.simx_return_ok:
             self.log_errors and print("Can not find middle sensor")
 
-    def __init__(self, client_id, params, log_errors=False, time_limit=-1):
+    def __init__(self, client_id, params=[0, 0, 0, 0], log_errors=False, time_limit=-1):
         self.clientID = client_id
         self.speed = params[0]
         self.Kp = params[1]
@@ -170,11 +170,29 @@ class LineFollower:
 
         return s_data_left, s_data_right
 
-    def rotate_wheels(self, left_angle, right_angle):
+    def set_rotation_angle(self, base_angle):
+        if base_angle > half_pi:
+            base_angle = half_pi
+        if base_angle < -half_pi:
+            base_angle = -half_pi
+
+        tan_correction_angle = math.tan(base_angle)
+
+        steering_angle_right = 0
+        steering_angle_left = 0
+        if tan_correction_angle != 0:
+            steering_angle_left = math.atan(l / (-half_t + l / tan_correction_angle))
+            steering_angle_right = math.atan(l / (half_t + l / tan_correction_angle))
+
+        # print("Angle: "),
+        # print("\tleft=" + str(steering_angle_left)),
+        # print("\tbase=" + str(base_angle)),
+        # print("\tright=" + str(steering_angle_right)),
+
         err_code = vrep.simxSetJointTargetPosition(
             self.clientID,
             self.left_steering,
-            left_angle,
+            steering_angle_left,
             vrep.simx_opmode_streaming)
         if err_code != vrep.simx_return_ok:
             self.log_errors and print("Error changing rotation angle at left steering")
@@ -182,10 +200,28 @@ class LineFollower:
         err_code = vrep.simxSetJointTargetPosition(
             self.clientID,
             self.right_steering,
-            right_angle,
+            steering_angle_right,
             vrep.simx_opmode_streaming)
         if err_code != vrep.simx_return_ok:
             self.log_errors and print("Error changing rotation angle at right steering")
+
+    def set_speed(self, speed):
+        # print("Speed: " + str(speed))
+        err_code = vrep.simxSetJointTargetVelocity(
+            self.clientID,
+            self.left_motor,
+            speed,
+            vrep.simx_opmode_streaming)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Error setting base speed to left motor")
+
+        err_code = vrep.simxSetJointTargetVelocity(
+            self.clientID,
+            self.right_motor,
+            speed,
+            vrep.simx_opmode_streaming)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Error setting base speed to right motor")
 
     def set_initial_values(self):
         err_code = -1
@@ -196,6 +232,7 @@ class LineFollower:
             vrep.simx_opmode_blocking)
             if err_code != vrep.simx_return_ok:
                 self.log_errors and print("Error init middle sensor")
+                time.sleep(1)
         err_code = -1
         while err_code != vrep.simx_return_ok:
             err_code, state, data_right = vrep.simxReadVisionSensor(
@@ -259,20 +296,44 @@ class LineFollower:
 
             correction_angle = degToRadConst * (self.Kp * error + self.Ki * integral + self.Kd * derivative)
 
-            if correction_angle > half_pi:
-                correction_angle = half_pi
-            if correction_angle < -half_pi:
-                correction_angle = -half_pi
+            self.set_rotation_angle(correction_angle)
 
-            tan_correction_angle = math.tan(correction_angle)
+            # Check if car still follows the line
+            err_code, state, data_middle = vrep.simxReadVisionSensor(
+                self.clientID,
+                self.left_sensor,
+                vrep.simx_opmode_streaming)
+            if err_code == vrep.simx_return_ok:
+                car_on_line = (data_middle[0][11] < 0.9)
 
-            steering_angle_right = 0
-            steering_angle_left = 0
-            if tan_correction_angle != 0:
-                steering_angle_left = math.atan(l / (-half_t + l / tan_correction_angle))
-                steering_angle_right = math.atan(l / (half_t + l / tan_correction_angle))
+            # Check if time limit for simulation is not exceeded
+            if self.time_limit != -1:
+                sim_in_timeline = (time.time() - sim_start_time) < self.time_limit
 
-            self.rotate_wheels(left_angle=steering_angle_left, right_angle=steering_angle_right)
+            time.sleep(cycleTime - (time.time() - cycle_start_time))
+
+        return time.time() - sim_start_time
+
+    def run_controlled_car(self, controller):
+
+        sensor_data_l = 0.5
+        sensor_data_r = 0.5
+
+        self.set_initial_values()
+
+        sim_start_time = time.time()
+        sim_in_timeline = True
+
+        car_on_line = True
+        while car_on_line and sim_in_timeline:
+            cycle_start_time = time.time()
+
+            sensor_data_l, sensor_data_r = self.read_vision_sensors(last_left=sensor_data_l, last_right=sensor_data_r)
+
+            [speed, correction_angle] = controller.get_controlled_params(sensor_data_l, sensor_data_r)
+
+            self.set_rotation_angle(correction_angle)
+            self.set_speed(speed)
 
             # Check if car still follows the line
             err_code, state, data_middle = vrep.simxReadVisionSensor(

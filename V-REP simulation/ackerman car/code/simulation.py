@@ -74,3 +74,22 @@ def run_test(client_id, speed, kp, ki, kd, log_errors=False, time_limit=-1):
           + "\n-------------------------")
 
     return sim_time
+
+
+def run_controlled_test(client_id, controller, log_errors=False, time_limit=-1):
+    ### Init & start simulation ###
+    lf = LineFollower.LineFollower(client_id, [0, 0, 0, 0], log_errors=log_errors, time_limit=time_limit)
+    vrep.simxStartSimulation(client_id, vrep.simx_opmode_oneshot)
+    ###-###
+
+    ### Run simulation ###
+    sim_time = lf.run_controlled_car(controller)
+    ###-###
+
+    ### Stop simulation ###
+    err_code = -1
+    while err_code != vrep.simx_return_ok:
+        err_code = vrep.simxStopSimulation(client_id, vrep.simx_opmode_oneshot)
+        time.sleep(1)
+    ###-###
+    return sim_time

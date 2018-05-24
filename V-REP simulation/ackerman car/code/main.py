@@ -1,7 +1,8 @@
 import csv
+
 import simulation
 import TestDataGenerator
-import NEAT_Tester
+from NEAT_engine import NEAT_Tester_old, NEAT_Tester
 
 
 def export_data(params):
@@ -24,8 +25,8 @@ def run_test_engine(client_id):
         export_data([[t_speed, t_kp, t_ki, t_kd, t_time]])
 
 
-def run_NEAT_tests(client_id):
-    NEAT_Tester.init_tester(
+def run_old_NEAT_tests(client_id):
+    NEAT_Tester_old.init_tester(
         c_id=client_id,
         borders=[
             [75, 250],
@@ -37,21 +38,30 @@ def run_NEAT_tests(client_id):
         time_limit=750,
         gen_amount=100
     )
+    NEAT_Tester_old.run()
+
+
+def run_NEAT_tests(client_id):
+    NEAT_Tester.init_tester(
+        c_id=client_id,
+        time_limit=750,
+        gen_amount=100
+    )
     NEAT_Tester.run()
 
 
 def run_simple_test(client_id):
-    simulation.run_test(client_id, speed=85, kp=7, ki=0.1, kd=5, log_errors=True, time_limit=-1)
+    simulation.run_test(client_id, speed=85, kp=7, ki=0.1, kd=3, log_errors=True, time_limit=-1)
 
 
 def run_program():
-    client_id = simulation.init_connection_scene(path="..\\ackerman_car.ttt") # path to scene
-
+    client_id = simulation.init_connection_scene(path="..\\ackerman_car1.ttt") # path to scene
     # export_data([["speed", "kp", "ki", "kd", "time"]])
 
     # run_simple_test(client_id)
     # run_test_engine(client_id)
-    # run_NEAT_tests(client_id)
+    # run_old_NEAT_tests(client_id)
+    run_NEAT_tests(client_id)
 
     simulation.close_connection_scene(client_id)
 
