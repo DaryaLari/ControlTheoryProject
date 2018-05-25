@@ -1,3 +1,5 @@
+import numpy as np
+
 try:
     import vrep
 except:
@@ -113,24 +115,44 @@ class LineFollower:
             self.log_errors and print("Error init right back motor")
 
     def init_sensors(self):
-        err_code, self.left_sensor = vrep.simxGetObjectHandle(
-            self.clientID,
-            'leftSensor',
-            vrep.simx_opmode_blocking)
-        if err_code != vrep.simx_return_ok:
-            self.log_errors and print("Can not find left sensor")
-        err_code, self.right_sensor = vrep.simxGetObjectHandle(
-            self.clientID,
-            'rightSensor',
-            vrep.simx_opmode_blocking)
-        if err_code != vrep.simx_return_ok:
-            self.log_errors and print("Can not find right sensor")
+        # err_code, self.left_sensor = vrep.simxGetObjectHandle(
+        #     self.clientID,
+        #     'leftSensor',
+        #     vrep.simx_opmode_blocking)
+        # if err_code != vrep.simx_return_ok:
+        #     self.log_errors and print("Can not find left sensor")
+        # err_code, self.right_sensor = vrep.simxGetObjectHandle(
+        #     self.clientID,
+        #     'rightSensor',
+        #     vrep.simx_opmode_blocking)
+        # if err_code != vrep.simx_return_ok:
+        #     self.log_errors and print("Can not find right sensor")
         err_code, self.middle_sensor = vrep.simxGetObjectHandle(
             self.clientID,
             'middleSensor',
             vrep.simx_opmode_blocking)
         if err_code != vrep.simx_return_ok:
             self.log_errors and print("Can not find middle sensor")
+
+    def init_proximity_sensors(self):
+        err_code, self.left_prox_sensor = vrep.simxGetObjectHandle(
+            self.clientID,
+            'Proximity_sensor_left',
+            vrep.simx_opmode_blocking)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Can not find left proximity sensor")
+        err_code, self.right_prox_sensor = vrep.simxGetObjectHandle(
+            self.clientID,
+            'Proximity_sensor_right',
+            vrep.simx_opmode_blocking)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Can not find right proximity sensor")
+        err_code, self.middle_prox_sensor = vrep.simxGetObjectHandle(
+            self.clientID,
+            'Proximity_sensor_middle',
+            vrep.simx_opmode_blocking)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Can not find middle proximity sensor")
 
     def __init__(self, client_id, params=[0, 0, 0, 0], log_errors=False, time_limit=-1):
         self.clientID = client_id
@@ -146,6 +168,7 @@ class LineFollower:
         self.init_steering()
         self.init_back_motors()
         self.init_sensors()
+        self.init_proximity_sensors()
 
     def read_vision_sensors(self, last_left, last_right):
         s_data_left, s_data_right = last_left, last_right
@@ -169,6 +192,23 @@ class LineFollower:
             s_data_right = data_right[0][10]
 
         return s_data_left, s_data_right
+
+    def read_proximity_sensors(self):
+        err_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = vrep.simxReadProximitySensor(
+            self.clientID,
+            self.right_prox_sensor,
+            vrep.simx_opmode_buffer)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Error init right proximity sensor")
+        sensor_val_r = np.linalg.norm(detected_point)
+        err_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = vrep.simxReadProximitySensor(
+            self.clientID,
+            self.left_prox_sensor,
+            vrep.simx_opmode_buffer)
+        if err_code != vrep.simx_return_ok:
+            self.log_errors and print("Error init left proximity sensor")
+        sensor_val_l = np.linalg.norm(detected_point)
+        return sensor_val_l, sensor_val_r
 
     def set_rotation_angle(self, base_angle):
         if base_angle > half_pi:
@@ -228,27 +268,46 @@ class LineFollower:
         while err_code != vrep.simx_return_ok:
             err_code, state, data_middle = vrep.simxReadVisionSensor(
             self.clientID,
-            self.left_sensor,
+            self.middle_sensor,
             vrep.simx_opmode_blocking)
             if err_code != vrep.simx_return_ok:
                 self.log_errors and print("Error init middle sensor")
                 time.sleep(1)
+        # err_code = -1
+        # while err_code != vrep.simx_return_ok:
+        #     err_code, state, data_right = vrep.simxReadVisionSensor(
+        #     self.clientID,
+        #     self.right_sensor,
+        #     vrep.simx_opmode_blocking)
+        #     if err_code != vrep.simx_return_ok:
+        #         self.log_errors and print("Error init right sensor")
+        # err_code = -1
+        # while err_code != vrep.simx_return_ok:
+        #     err_code, state, data_left = vrep.simxReadVisionSensor(
+        #     self.clientID,
+        #     self.left_sensor,
+        #     vrep.simx_opmode_blocking)
+        #     if err_code != vrep.simx_return_ok:
+        #         self.log_errors and print("Error init left sensor")
+
         err_code = -1
         while err_code != vrep.simx_return_ok:
-            err_code, state, data_right = vrep.simxReadVisionSensor(
-            self.clientID,
-            self.right_sensor,
-            vrep.simx_opmode_blocking)
+            err_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = vrep.simxReadProximitySensor(
+                self.clientID,
+                self.right_prox_sensor,
+                vrep.simx_opmode_streaming)
             if err_code != vrep.simx_return_ok:
-                self.log_errors and print("Error init right sensor")
+                self.log_errors and print("Error init right proximity sensor")
+                time.sleep(1)
         err_code = -1
         while err_code != vrep.simx_return_ok:
-            err_code, state, data_left = vrep.simxReadVisionSensor(
-            self.clientID,
-            self.left_sensor,
-            vrep.simx_opmode_blocking)
+            err_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = vrep.simxReadProximitySensor(
+                self.clientID,
+                self.left_prox_sensor,
+                vrep.simx_opmode_streaming)
             if err_code != vrep.simx_return_ok:
-                self.log_errors and print("Error init left sensor")
+                self.log_errors and print("Error init left proximity sensor")
+                time.sleep(1)
 
         err_code = -1
         while err_code != vrep.simx_return_ok:
@@ -287,9 +346,9 @@ class LineFollower:
         while car_on_line and sim_in_timeline:
             cycle_start_time = time.time()
 
-            sensor_data_l, sensor_data_r = self.read_vision_sensors(last_left=sensor_data_l, last_right=sensor_data_r)
+            sensor_data_l, sensor_data_r = self.read_proximity_sensors()#self.read_vision_sensors(last_left=sensor_data_l, last_right=sensor_data_r)
 
-            error = sensor_data_r - sensor_data_l
+            error = - (sensor_data_r - sensor_data_l)
             integral = integral + error
             derivative = error - prev_error
             prev_error = error
@@ -301,7 +360,7 @@ class LineFollower:
             # Check if car still follows the line
             err_code, state, data_middle = vrep.simxReadVisionSensor(
                 self.clientID,
-                self.left_sensor,
+                self.middle_sensor,
                 vrep.simx_opmode_streaming)
             if err_code == vrep.simx_return_ok:
                 car_on_line = (data_middle[0][11] < 0.9)
@@ -328,7 +387,7 @@ class LineFollower:
         while car_on_line and sim_in_timeline:
             cycle_start_time = time.time()
 
-            sensor_data_l, sensor_data_r = self.read_vision_sensors(last_left=sensor_data_l, last_right=sensor_data_r)
+            sensor_data_l, sensor_data_r = self.read_proximity_sensors()#self.read_vision_sensors(last_left=sensor_data_l, last_right=sensor_data_r)
 
             [speed, correction_angle] = controller.get_controlled_params(sensor_data_l, sensor_data_r)
 
@@ -338,7 +397,7 @@ class LineFollower:
             # Check if car still follows the line
             err_code, state, data_middle = vrep.simxReadVisionSensor(
                 self.clientID,
-                self.left_sensor,
+                self.middle_sensor,
                 vrep.simx_opmode_streaming)
             if err_code == vrep.simx_return_ok:
                 car_on_line = (data_middle[0][11] < 0.9)

@@ -35,11 +35,11 @@ def run_NEAT_tests(client_id):
 
 
 def run_simple_test(client_id):
-    simulation.run_test(client_id, speed=85, kp=7, ki=0.1, kd=3, log_errors=True, time_limit=-1)
+    simulation.run_test(client_id, speed=50, kp=25, ki=0.1, kd=3, log_errors=True, time_limit=-1)
 
 
 def run_program():
-    client_id = simulation.init_connection_scene(path="..\\ackerman_car1.ttt") # path to scene
+    client_id = simulation.init_connection_scene(path="..\\ackerman_car_with_walls (1).ttt") # path to scene
     # export_data([["speed", "kp", "ki", "kd", "time"]])
 
     # run_simple_test(client_id)
