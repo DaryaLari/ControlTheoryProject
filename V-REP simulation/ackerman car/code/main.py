@@ -5,7 +5,7 @@ import TestDataGenerator
 from NeatEngine import NeatTester
 from car_controllers import PidController, sensor_type_vision, sensor_type_proximity
 
-path_to_scene = "..\\ackerman_car_with_walls.ttt"
+path_to_scene = "..\\ackerman_car.ttt"
 
 
 def export_data(params):
