@@ -1,12 +1,15 @@
 import csv
 
-import simulation
+from simulationEnvironment import simulation
 import TestDataGenerator
-from NEAT_engine import NEAT_Tester
+from NeatEngine import NeatTester
+from car_controllers import PidController, sensor_type_vision, sensor_type_proximity
+
+path_to_scene = "..\\ackerman_car_with_walls.ttt"
 
 
 def export_data(params):
-    with open("tests_results/results.csv", "a", newline="") as file:
+    with open("results/results.csv", "a", newline="") as file:
         writer = csv.writer(file)
         writer.writerows(params)
 
@@ -21,32 +24,73 @@ def run_test_engine(client_id):
         ])
     while test_gen.has_next():
         [t_speed, t_kp, t_ki, t_kd] = test_gen.get_test_case()
-        t_time = simulation.run_test(client_id, t_speed, t_kp, t_ki, t_kd, log_errors=False, time_limit=1500)
+        print("\n-------------------------"
+              + "\n| Speed: " + str(t_speed)
+              + "\n| Kp: " + str(t_kp)
+              + "\n| Ki: " + str(t_ki)
+              + "\n| Kd: " + str(t_kd)
+              + "\n---")
+        t_time = simulation.run_test(
+            PidController.PidController(
+                t_kp, t_ki, t_kd, t_speed,
+                sensor_type_vision,
+                time_limit=750
+            ),
+            log_errors=False
+        )
+        print("---"
+              + "\n| Sim. time: " + str(t_time)
+              + "\n-------------------------")
         export_data([[t_speed, t_kp, t_ki, t_kd, t_time]])
 
 
 def run_NEAT_tests(client_id):
-    NEAT_Tester.init_tester(
+    nt = NeatTester.NeatTester(
         c_id=client_id,
-        time_limit=750,
-        gen_amount=100
+        gen_amount=100,
+        resdir="results-vision-2",
+        restore_gen=-1,
+        sensor_type=sensor_type_vision,
+        time_limit=750
     )
-    NEAT_Tester.run()
+    if nt.population is not None:
+        nt.run()
 
 
-def run_simple_test(client_id):
-    simulation.run_test(client_id, speed=50, kp=25, ki=0.1, kd=3, log_errors=True, time_limit=-1)
-
+def run_simple_test():
+    kp = 10
+    ki = 0.1
+    kd = 3
+    base_speed = 50
+    print("\n-------------------------"
+          + "\n| Speed: " + str(base_speed)
+          + "\n| Kp: " + str(kp)
+          + "\n| Ki: " + str(ki)
+          + "\n| Kd: " + str(kd)
+          + "\n---")
+    sim_time = simulation.run_test(
+        PidController.PidController(
+            kp, ki, kd,
+            base_speed, sensor_type=sensor_type_vision,
+            time_limit=-1
+        ),
+        log_errors=True
+    )
+    print("---"
+          + "\n| Sim. time: " + str(sim_time)
+          + "\n-------------------------")
 
 def run_program():
-    client_id = simulation.init_connection_scene(path="..\\ackerman_car_with_walls (1).ttt") # path to scene
-    # export_data([["speed", "kp", "ki", "kd", "time"]])
+    client_id = simulation.init_connection_scene(path=path_to_scene)
+    if client_id == -1:
+        print("Error occured. Terminate program")
+        exit(-1)
 
-    # run_simple_test(client_id)
+    # run_simple_test()
     # run_test_engine(client_id)
     run_NEAT_tests(client_id)
 
-    simulation.close_connection_scene(client_id)
+    simulation.close_connection_scene()
 
 
 ### Starting  point ###
