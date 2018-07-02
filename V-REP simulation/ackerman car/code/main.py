@@ -14,7 +14,7 @@ def export_data(params):
         writer.writerows(params)
 
 
-def run_test_engine(client_id):
+def run_test_engine():
     test_gen = TestDataGenerator.TestDataGenerator(
         [ # [start_value, end_value, step_size]
             [50, 150, 5],   # speed
@@ -45,13 +45,20 @@ def run_test_engine(client_id):
 
 
 def run_NEAT_tests(client_id):
+    from NeatEngine.fitness_functions import distance
+    from car_controllers.NeatController import NeatController
+
+    def controller_init_function(controller):
+        controller.sensor_type = sensor_type_vision
+        controller.time_limit = 750
     nt = NeatTester.NeatTester(
         c_id=client_id,
+        fitness_function=distance,
+        controller_type=NeatController,
+        controller_init_function=controller_init_function,
         gen_amount=100,
-        resdir="results-vision-2",
-        restore_gen=-1,
-        sensor_type=sensor_type_vision,
-        time_limit=750
+        resdir="results/vision-1",
+        restore_gen=8
     )
     if nt.population is not None:
         nt.run()
@@ -71,7 +78,8 @@ def run_simple_test():
     sim_time = simulation.run_test(
         PidController.PidController(
             kp, ki, kd,
-            base_speed, sensor_type=sensor_type_vision,
+            base_speed,
+            sensor_type=sensor_type_vision,
             time_limit=-1
         ),
         log_errors=True
@@ -79,6 +87,21 @@ def run_simple_test():
     print("---"
           + "\n| Sim. time: " + str(sim_time)
           + "\n-------------------------")
+
+
+def run_with_best_genome():
+    from car_controllers.NeatController import NeatController
+    from NeatEngine.utils import get_net_of_best_genome
+    net = get_net_of_best_genome("results/vision-1", 7)
+    sim_time = simulation.run_test(
+        NeatController(
+            net=net,
+            sensor_type=sensor_type_vision,
+            time_limit=-1
+        ),
+        log_errors=False
+    )
+    print("Sim. time: " + str(sim_time))
 
 def run_program():
     client_id = simulation.init_connection_scene(path=path_to_scene)
@@ -89,6 +112,7 @@ def run_program():
     # run_simple_test()
     # run_test_engine(client_id)
     run_NEAT_tests(client_id)
+    # run_with_best_genome()
 
     simulation.close_connection_scene()
 

@@ -2,7 +2,6 @@ import neat
 import os
 import csv
 from simulationEnvironment import simulation
-from car_controllers import NeatController, sensor_type_vision
 
 
 class NeatTester:
@@ -10,13 +9,14 @@ class NeatTester:
     sim_time_limit = -1
     max_generations = 100
 
-    def __init__(self, c_id, gen_amount=100, resdir="results", restore_gen=-1, sensor_type=sensor_type_vision, time_limit=-1):
+    def __init__(self, c_id, fitness_function, controller_type, controller_init_function, gen_amount=100, resdir="results", restore_gen=-1):
         self.client_id = c_id
-        self.sim_time_limit = time_limit
+        self.controller_type = controller_type
+        self.controller_init_function = controller_init_function
+        self.calc_fitness = fitness_function
         self.max_generations = gen_amount
         self.baseDir = resdir
         self.population = None
-        self.sensor_type = sensor_type
 
         local_dir = os.path.dirname(__file__)
         config_file = os.path.join(local_dir, 'config-neat')
@@ -33,11 +33,11 @@ class NeatTester:
             os.makedirs(self.baseDir + "/statistics")
 
         if restore_gen != -1:
-            restoreFileName = self.baseDir + "/checkpoints/neat-checkpoint-" + str(restore_gen)
-            if not os.path.exists(restoreFileName):
-                print("File '" + restoreFileName + "' doesn't exists")
+            restore_file_name = self.baseDir + "/checkpoints/neat-checkpoint-" + str(restore_gen)
+            if not os.path.exists(restore_file_name):
+                print("File '" + restore_file_name + "' doesn't exists")
                 return
-            p = neat.Checkpointer.restore_checkpoint(restoreFileName)
+            p = neat.Checkpointer.restore_checkpoint(restore_file_name)
         # Add a stdout reporter to show progress in the terminal.
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
@@ -61,11 +61,15 @@ class NeatTester:
         self.export_population_info(["Average Speed", "Simulation Time", "Fitness"])
         for genome_id, genome in genomes:
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            controller = NeatController.NeatController(net, self.sensor_type, cycle_time=0.1, time_limit=self.sim_time_limit)
+            # Create & init controller
+            controller = self.controller_type(net)
+            if self.controller_init_function is not None:
+                self.controller_init_function(controller)
+
             time = simulation.run_test(controller, log_errors=False)
 
             avg_speed = controller.avg_speed
-            genome.fitness = avg_speed * time
+            genome.fitness = self.calc_fitness(controller.states) # avg_speed * time
             self.export_population_info([avg_speed, time, genome.fitness])
 
     def run(self):
