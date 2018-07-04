@@ -1,6 +1,5 @@
 import time
 
-import vrep
 from car_controllers import sensor_type_vision, sensor_type_proximity
 
 
@@ -61,7 +60,7 @@ class UniversalController:
         return correction_angle, self.speed
 
     def is_car_on_line(self): # Check if car still follows the line
-        err_code, data_middle = self.driven_car.read_single_vision_sensor(self.driven_car.middle_sensor)
-        if err_code == vrep.simx_return_ok:
+        err_code, data_middle = self.driven_car.read_single_vision_sensor(self.driven_car.vision_sensor_middle)
+        if len(data_middle) > 0:
             return data_middle[0][11] < 0.9
         return True

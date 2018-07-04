@@ -6,12 +6,14 @@ import os
 
 source_dir = 'results'
 statistics_prefix = 'statistics/gen-'
+checkpoints_prefix = 'checkpoints/neat-checkpoint-'
 
 
-def init(dir, stat_prefix='statistics/gen-'):
-    global source_dir, statistics_prefix
+def init(dir, stat_prefix='statistics/gen-', checkp_prefix='checkpoints/neat-checkpoint-'):
+    global source_dir, statistics_prefix, checkpoints_prefix
     source_dir = dir
     statistics_prefix = stat_prefix
+    checkpoints_prefix = checkp_prefix
 
 
 def import_gen_stat_data(gen_no):
@@ -76,8 +78,8 @@ def speed_time_dependency(gen_no):
 
 def draw_best_genome_net(gen_no):
     from NeatEngine.utils import import_best_genome
-    best_gen, config = import_best_genome('results/vision-1/neat-checkpoint-' + str(gen_no),
-                                          'results/vision-1/config-neat')
+    best_gen, config = import_best_genome(os.path.join(source_dir, checkpoints_prefix + str(gen_no)),
+                                          os.path.join(source_dir, 'config-neat'))
     draw_net(config, best_gen, 'net-gen-' + str(gen_no))
 
 

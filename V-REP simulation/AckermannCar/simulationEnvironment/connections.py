@@ -1,18 +1,19 @@
 try:
     import vrep
 except:
-    print ('--------------------------------------------------------------')
-    print ('"vrep.py" could not be imported. This means very probably that')
-    print ('either "vrep.py" or the remoteApi library could not be found.')
-    print ('Make sure both are in the same folder as this file,')
-    print ('or appropriately adjust the file "vrep.py"')
-    print ('--------------------------------------------------------------')
-    print ('')
+    print('--------------------------------------------------------------')
+    print('"vrep.py" could not be imported. This means very probably that')
+    print('either "vrep.py" or the remoteApi library could not be found.')
+    print('Make sure both are in the same folder as this file,')
+    print('or appropriately adjust the file "vrep.py"')
+    print('--------------------------------------------------------------')
+    print('')
 
 import time
 from simulationEnvironment import AckermannCar
 
 clientId = -1
+remote_api_port = 19997
 
 
 def init_connection_scene(path):
@@ -20,7 +21,7 @@ def init_connection_scene(path):
     print('Program started')
     # Connect to remote API server
     vrep.simxFinish(-1) # just in case, close all opened connections
-    clientId = vrep.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
+    clientId = vrep.simxStart('127.0.0.1', remote_api_port, True, True, 5000, 5)
     if clientId == -1:
         print('Failed connecting to remote API server')
         return -1
@@ -28,7 +29,7 @@ def init_connection_scene(path):
     # Load scene
     err_code = vrep.simxLoadScene(clientId, path, 0xFF, vrep.simx_opmode_blocking)
     if err_code != vrep.simx_return_ok:
-        print("Failed loading scene")
+        print('Failed loading scene')
         vrep.simxFinish(clientId)
         return -1
 
