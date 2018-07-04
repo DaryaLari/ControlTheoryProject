@@ -1,6 +1,7 @@
 import neat
 import os
 import csv
+import shutil
 from simulationEnvironment import connections
 
 
@@ -17,11 +18,11 @@ class NeatTester:
         self.population = None
 
         local_dir = os.path.dirname(__file__)
-        config_file = os.path.join(local_dir, 'config-neat')
+        source_config_file = os.path.join(local_dir, 'config-neat')
         # Load configuration.
         config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                              neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                             config_file)
+                             source_config_file)
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
@@ -29,6 +30,11 @@ class NeatTester:
         if not os.path.exists(self.baseDir):
             os.makedirs(self.baseDir + '/checkpoints')
             os.makedirs(self.baseDir + '/statistics')
+
+        config_file_copy = os.path.join(self.baseDir, 'config-neat')
+
+        if not os.path.exists(config_file_copy):
+            shutil.copy(source_config_file, config_file_copy)
 
         if restore_gen != -1:
             restore_file_name = self.baseDir + '/checkpoints/neat-checkpoint-' + str(restore_gen)

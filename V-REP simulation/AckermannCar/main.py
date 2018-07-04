@@ -5,7 +5,7 @@ import TestDataGenerator
 from NeatEngine import NeatTester
 from car_controllers import PidController, NeatController, sensor_type_vision, sensor_type_proximity
 
-path_to_scene = '.\\V-REP_scenes\\ackerman_car_complicated.ttt'
+path_to_scene = '.\\V-REP_scenes\\ackerman_car.ttt'
 
 
 def export_data(params):
@@ -56,7 +56,7 @@ def run_neat_tests():
         controller_init_function=controller_init_function,
         gen_amount=100,
         resdir="results/vision-1",
-        restore_gen=20
+        restore_gen=24
     )
     if nt.population is not None:
         nt.run()
@@ -108,9 +108,9 @@ def run_program():
         print("Error occured. Terminate program")
         exit(-1)
 
-    run_single_test()
+    # run_single_test()
     # run_test_engine()
-    # run_neat_tests()
+    run_neat_tests()
     # run_best_genome()
 
     connections.close_connection_scene()
