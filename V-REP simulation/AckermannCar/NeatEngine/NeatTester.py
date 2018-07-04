@@ -40,7 +40,7 @@ class NeatTester:
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(1, filename_prefix=self.baseDir + ''/checkpoints/neat-checkpoint-''))
+        p.add_reporter(neat.Checkpointer(1, filename_prefix=self.baseDir + '/checkpoints/neat-checkpoint-'))
 
         self.population = p
 
